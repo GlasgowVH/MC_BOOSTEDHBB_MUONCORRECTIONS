@@ -80,16 +80,66 @@ namespace Rivet {
                 // all charged particles with pt > 100 MeV
                 ChargedFinalState trackPartFS(-2.5, 2.5, 100*MeV);
 
+                // TODO
+                // there's a problem with the second projection
+                // veto of veto FS causing it?
                 // various large-R jet collections
                 addProjection(FastJets(allJetPartFS, FastJets::ANTIKT, 1.0), "AktAll10");
                 addProjection(FastJets(caloJetPartFS, FastJets::ANTIKT, 1.0), "AktCalo10");
 
+                // TODO
+                // there's a problem with the second projection
+                // veto of veto FS causing it?
                 // various small-R jet collections
                 addProjection(FastJets(allJetPartFS, FastJets::ANTIKT, 0.4), "AktAll04");
                 addProjection(FastJets(caloJetPartFS, FastJets::ANTIKT, 0.4), "AktCalo04");
 
                 // small-R track jets
                 addProjection(FastJets(trackPartFS, FastJets::ANTIKT, 0.2), "AktTrack02");
+
+
+                // book histograms
+                uncorrAkt10CaloJetMeanPtResponseVsPt =
+                    bookProfile1D("uncorrAkt10CaloJetMeanPtResponseVsPt", 50, 0, 500*GeV,
+                            "uncorrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< p_{T,{\\rm jet}} \\right>$ / GeV");
+
+                uncorrAkt10CaloJetMeanMassResponseVsPt =
+                    bookProfile1D("uncorrAkt10CaloJetMeanMassResponseVsPt", 50, 0, 500*GeV,
+                            "uncorrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< m_{\\rm jet} \\right>$ / GeV");
+
+                uncorrAkt10CaloJetMeanPtResponseVsMass =
+                    bookProfile1D("uncorrAkt10CaloJetMeanPtResponseVsMass", 50, 0, 500*GeV,
+                            "uncorrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< p_{T,{\\rm jet}} \\right>$ / GeV");
+
+                uncorrAkt10CaloJetMeanMassResponseVsMass =
+                    bookProfile1D("uncorrAkt10CaloJetMeanMassResponseVsMass", 50, 0, 500*GeV,
+                            "uncorrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< m_{\\rm jet} \\right>$ / GeV");
+
+                corrAkt10CaloJetMeanPtResponseVsPt =
+                    bookProfile1D("corrAkt10CaloJetMeanPtResponseVsPt", 50, 0, 500*GeV,
+                            "corrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< p_{T,{\\rm jet}} \\right>$ / GeV");
+
+                corrAkt10CaloJetMeanMassResponseVsPt =
+                    bookProfile1D("corrAkt10CaloJetMeanMassResponseVsPt", 50, 0, 500*GeV,
+                            "corrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< m_{\\rm jet} \\right>$ / GeV");
+
+                corrAkt10CaloJetMeanPtResponseVsMass =
+                    bookProfile1D("corrAkt10CaloJetMeanPtResponseVsMass", 50, 0, 500*GeV,
+                            "corrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< p_{T,{\\rm jet}} \\right>$ / GeV");
+
+                corrAkt10CaloJetMeanMassResponseVsMass =
+                    bookProfile1D("corrAkt10CaloJetMeanMassResponseVsMass", 50, 0, 500*GeV,
+                            "corrected anti-$k_t$ $R=1.0$ jets",
+                            "full jet $p_T$ / GeV", "$\\left< m_{\\rm jet} \\right>$ / GeV");
+
+
             }
 
 
@@ -143,6 +193,83 @@ namespace Rivet {
                 // - add non-prompt muon momentum to calo jet momentum
                 // - try adding a multiple of muon momentum to calo jet momentum
                 // - etc.
+
+
+                foreach (const Jet& uncorrJet, aktCalo10Jets) {
+
+                    // find the corresponding full jet
+                    Jet fullJet;
+                    foreach (const Jet& jet, aktAll10Jets) {
+                        // TODO
+                        // not really the best way to match
+                        if (deltaR(uncorrJet, jet) < 0.2) {
+                            fullJet = jet;
+                            break;
+                        }
+                    }
+
+                    // TODO
+                    // fine muons through trackjets
+
+                    // find all corresponding trackjets
+                    Jets assocTrackjets;
+                    foreach (const Jet& jet, aktTrack02Jets) {
+                        if (deltaR(uncorrJet, jet) < 1.0)
+                            assocTrackjets.push_back(jet);
+                    }
+
+
+                    // find all corresponding muons
+                    Particles assocMuons;
+                    foreach (const Particle& muon, nonpromptMuons) {
+                        // TODO
+                        // not really the best way to match
+                        if (deltaR(uncorrJet, muon) < 1.0)
+                            assocMuons.push_back(muon);
+                    }
+
+                    // find all corresponding muons
+                    Particles assocNeutrinos;
+                    foreach (const Particle& neutrino, nonpromptNeutrinos) {
+                        // TODO
+                        // not really the best way to match
+                        if (deltaR(uncorrJet, neutrino) < 1.0)
+                            assocNeutrinos.push_back(neutrino);
+                    }
+
+                    // TODO
+                    // how many of these muons and neutrinos aren't
+                    // jet constituents?
+
+                    // TODO
+                    // for now just add the muons back and see what
+                    // happens.
+
+                    FourMomentum corrJetP4 = uncorrJet.mom();
+                    foreach (const Particle& muon, assocMuons)
+                        corrJetP4 += muon;
+
+
+                    const Jet corrJet = Jet(corrJetP4);
+
+                    double uncorrPt = uncorrJet.pt();
+                    double corrPt = corrJet.pt();
+                    double fullPt = fullJet.pt();
+                    double uncorrMass = uncorrJet.mass();
+                    double corrMass = corrJet.mass();
+                    double fullMass = fullJet.mass();
+
+                    uncorrAkt10CaloJetMeanPtResponseVsPt->fill(fullPt, uncorrPt);
+                    uncorrAkt10CaloJetMeanMassResponseVsPt->fill(fullPt, uncorrMass);
+                    corrAkt10CaloJetMeanPtResponseVsPt->fill(fullPt, corrPt);
+                    corrAkt10CaloJetMeanMassResponseVsPt->fill(fullPt, corrMass);
+
+                    uncorrAkt10CaloJetMeanPtResponseVsMass->fill(fullMass, uncorrPt);
+                    uncorrAkt10CaloJetMeanMassResponseVsMass->fill(fullMass, uncorrMass);
+                    corrAkt10CaloJetMeanPtResponseVsMass->fill(fullMass, corrPt);
+                    corrAkt10CaloJetMeanMassResponseVsMass->fill(fullMass, corrMass);
+                }
+
             }
 
 
@@ -163,18 +290,14 @@ namespace Rivet {
 
             // Data members like post-cuts event weight counters go here
 
-
-            /// @name Histograms
-            //@{
-            // some examples
-            Profile1DPtr UncorrAkt10CaloJet_Mean_Pt_Response_Vs_Akt10AllJet_Pt;
-            Profile1DPtr UncorrAkt10CaloJet_Mean_Mass_Response_Vs_Akt10AllJet_Pt;
-            Profile1DPtr UncorrAkt04CaloJet_Mean_Pt_Response_Vs_Akt10AllJet_Pt;
-            Profile1DPtr CorrAkt10CaloJet_Mean_Pt_Response_Vs_Akt10AllJet_Pt;
-            Profile1DPtr CorrAkt10CaloJet_Mean_Mass_Response_Vs_Akt10AllJet_Pt;
-            Profile1DPtr CorrAkt04CaloJet_Mean_Pt_Response_Vs_Akt04AllJet_Pt;
-            //@}
-
+            Profile1DPtr uncorrAkt10CaloJetMeanPtResponseVsPt;
+            Profile1DPtr uncorrAkt10CaloJetMeanMassResponseVsPt;
+            Profile1DPtr corrAkt10CaloJetMeanPtResponseVsPt;
+            Profile1DPtr corrAkt10CaloJetMeanMassResponseVsPt;
+            Profile1DPtr uncorrAkt10CaloJetMeanPtResponseVsMass;
+            Profile1DPtr uncorrAkt10CaloJetMeanMassResponseVsMass;
+            Profile1DPtr corrAkt10CaloJetMeanPtResponseVsMass;
+            Profile1DPtr corrAkt10CaloJetMeanMassResponseVsMass;
 
 };
 
