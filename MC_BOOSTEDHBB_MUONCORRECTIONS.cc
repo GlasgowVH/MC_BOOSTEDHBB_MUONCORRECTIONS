@@ -28,42 +28,35 @@ namespace Rivet {
                 // with pt > 100 MeV
                 FinalState allPartFS(Cuts::abseta < 3.0);
 
-                // only prompt particles (not coming from hadron
-                // decays)
-                // particles from prompt taus are considered prompt.
-                PromptFinalState promptFS(allPartFS);
-                promptFS.acceptTauDecays(true);
-
-                // only non-prompt particles (coming from hadron
-                // decays)
-                VetoedFinalState nonpromptFS(allPartFS);
-                nonpromptFS.addVetoOnThisFinalState(promptFS);
-
-                // prompt muons
-                IdentifiedFinalState promptMuonFS(promptFS);
-                promptMuonFS.acceptIdPair(13);
-                addProjection(promptMuonFS, "PromptMuons");
-
-                // prompt neutrinos
-                IdentifiedFinalState promptNeutrinoFS(promptFS);
-                promptNeutrinoFS.acceptNeutrinos();
-                addProjection(promptNeutrinoFS, "PromptNeutrinos");
-
-                // nonprompt muons
-                IdentifiedFinalState nonpromptMuonFS(nonpromptFS);
-                nonpromptMuonFS.acceptIdPair(13);
-                addProjection(nonpromptMuonFS, "NonpromptMuons");
-
-                // nonprompt neutrinos
-                IdentifiedFinalState nonpromptNeutrinoFS(nonpromptFS);
-                nonpromptNeutrinoFS.acceptNeutrinos();
-                addProjection(nonpromptNeutrinoFS, "NonpromptNeutrinos");
-
-                MergedFinalState allMuonFS(promptMuonFS, nonpromptMuonFS);
+                // all muons
+                IdentifiedFinalState allMuonFS(allPartFS);
+                allMuonFS.acceptIdPair(13);
                 addProjection(allMuonFS, "AllMuons");
 
-                MergedFinalState allNeutrinoFS(promptNeutrinoFS, nonpromptNeutrinoFS);
+                // prompt muons
+                PromptFinalState promptMuonFS(allMuonFS);
+                promptMuonFS.acceptTauDecays(true);
+                addProjection(promptMuonFS, "PromptMuons");
+
+                // nonprompt muons
+                VetoedFinalState nonpromptMuonFS(allMuonFS);
+                nonpromptMuonFS.addVetoOnThisFinalState(promptMuonFS);
+                addProjection(nonpromptMuonFS, "NonpromptMuons");
+
+                // all neutrinos
+                IdentifiedFinalState allNeutrinoFS(allPartFS);
+                allNeutrinoFS.acceptNeutrinos();
                 addProjection(allNeutrinoFS, "AllNeutrinos");
+
+                // prompt neutrinos
+                PromptFinalState promptNeutrinoFS(allNeutrinoFS);
+                promptNeutrinoFS.acceptTauDecays(true);
+                addProjection(promptNeutrinoFS, "PromptNeutrinos");
+
+                // nonprompt neutrinos
+                VetoedFinalState nonpromptNeutrinoFS(allNeutrinoFS);
+                nonpromptNeutrinoFS.addVetoOnThisFinalState(promptNeutrinoFS);
+                addProjection(nonpromptNeutrinoFS, "NonpromptNeutrinos");
 
 
                 // allJetPartFS: exclude only prompt neutrinos and muons
@@ -185,22 +178,22 @@ namespace Rivet {
                 const double weight = event.weight();
 
                 const Particles& allMuons =
-                    applyProjection<MergedFinalState>(event, "AllMuons").particlesByPt();
+                    applyProjection<IdentifiedFinalState>(event, "AllMuons").particlesByPt();
 
                 const Particles& promptMuons =
-                    applyProjection<IdentifiedFinalState>(event, "PromptMuons").particlesByPt();
+                    applyProjection<PromptFinalState>(event, "PromptMuons").particlesByPt();
 
                 const Particles& nonpromptMuons =
-                    applyProjection<IdentifiedFinalState>(event, "NonpromptMuons").particlesByPt();
+                    applyProjection<VetoedFinalState>(event, "NonpromptMuons").particlesByPt();
 
                 const Particles& allNeutrinos =
-                    applyProjection<MergedFinalState>(event, "AllNeutrinos").particlesByPt();
+                    applyProjection<IdentifiedFinalState>(event, "AllNeutrinos").particlesByPt();
 
                 const Particles& promptNeutrinos =
-                    applyProjection<IdentifiedFinalState>(event, "PromptNeutrinos").particlesByPt();
+                    applyProjection<PromptFinalState>(event, "PromptNeutrinos").particlesByPt();
 
                 const Particles& nonpromptNeutrinos =
-                    applyProjection<IdentifiedFinalState>(event, "NonpromptNeutrinos").particlesByPt();
+                    applyProjection<VetoedFinalState>(event, "NonpromptNeutrinos").particlesByPt();
 
 
                 // large-R jets
