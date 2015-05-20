@@ -107,7 +107,7 @@ namespace Rivet {
                             "jet $p_T$ / GeV", "$\\frac{d\\sigma}{dp_T} / \\frac{\\rm pb}{\\rm GeV}$");
 
                 akt10AllJetMass =
-                    bookHisto1D("akt10AllJetMass", 50, 0, 1000*GeV,
+                    bookHisto1D("akt10AllJetMass", 50, 0, 500*GeV,
                             "anti-$k_t$ $R=1.0$ jets",
                             "jet mass / GeV", "$\\frac{d\\sigma}{dm} / \\frac{\\rm pb}{\\rm GeV}$");
 
@@ -118,7 +118,7 @@ namespace Rivet {
                             "jet $p_T$ / GeV", "$\\frac{d\\sigma}{dp_T} / \\frac{\\rm pb}{\\rm GeV}$");
 
                 uncorrAkt10CaloJetMass =
-                    bookHisto1D("uncorrAkt10CaloJetMass", 50, 0, 1000*GeV,
+                    bookHisto1D("uncorrAkt10CaloJetMass", 50, 0, 500*GeV,
                             "uncorrected anti-$k_t$ $R=1.0$ jets",
                             "jet mass / GeV", "$\\frac{d\\sigma}{dm} / \\frac{\\rm pb}{\\rm GeV}$");
 
@@ -128,7 +128,7 @@ namespace Rivet {
                             "jet $p_T$ / GeV", "$\\frac{d\\sigma}{dp_T} / \\frac{\\rm pb}{\\rm GeV}$");
 
                 corrAkt10CaloJetMass =
-                    bookHisto1D("corrAkt10CaloJetMass", 50, 0, 1000*GeV,
+                    bookHisto1D("corrAkt10CaloJetMass", 50, 0, 500*GeV,
                             "corrected anti-$k_t$ $R=1.0$ jets",
                             "jet mass / GeV", "$\\frac{d\\sigma}{dm} / \\frac{\\rm pb}{\\rm GeV}$");
 
