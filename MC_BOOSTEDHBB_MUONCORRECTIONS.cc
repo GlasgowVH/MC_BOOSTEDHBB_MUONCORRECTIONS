@@ -255,6 +255,10 @@ namespace Rivet {
                     // find all corresponding muons
                     Particles assocMuons;
                     foreach (const Particle& muon, nonpromptMuons) {
+                        // only identify muons with |eta| < 2.5
+                        if (muon.abseta() > 2.5)
+                            continue;
+
                         // TODO
                         // not really the best way to match
                         if (deltaR(uncorrJet, muon) < 1.0)
@@ -297,7 +301,7 @@ namespace Rivet {
                     corrAkt10CaloJetMass->fill(corrMass, weight);
 
                     // we didn't find a matched jet...
-                    if (!allJet.pt())
+                    if (!allJet.pt() || !allJet.mass())
                         continue;
 
                     double allPt = allJet.pt();
