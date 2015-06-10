@@ -75,32 +75,36 @@ namespace Rivet {
                 // all charged particles with pt > 100 MeV
                 ChargedFinalState trackPartFS(-2.5, 2.5, 100*MeV);
 
-                // TODO
-                // there's a problem with the second projection
-                // veto of veto FS causing it?
                 // various large-R jet collections
-                addProjection(FastJets(allJetPartFS, FastJets::ANTIKT, 1.0), "Akt10All");
-                addProjection(FastJets(caloJetPartFS, FastJets::ANTIKT, 1.0), "Akt10Calo");
+                FastJets akt10InclusiveJetProj (allJetPartFS, FastJets::ANTIKT, 1.0);
+                akt10InclusiveJetProj.useInvisibles(true);
+                addProjection(akt10InclusiveJetProj, "Akt10Inclusive");
 
-                // TODO
-                // there's a problem with the second projection
-                // veto of veto FS causing it?
+                FastJets akt10CaloJetProj (caloJetPartFS, FastJets::ANTIKT, 1.0);
+                akt10CaloJetProj.useInvisibles(true);
+                addProjection(akt10CaloJetProj, "Akt10Calo");
+
+
                 // various small-R jet collections
-                addProjection(FastJets(allJetPartFS, FastJets::ANTIKT, 0.4), "Akt04All");
-                addProjection(FastJets(caloJetPartFS, FastJets::ANTIKT, 0.4), "Akt04Calo");
+                FastJets akt04InclusiveJetProj (allJetPartFS, FastJets::ANTIKT, 0.4);
+                akt04InclusiveJetProj.useInvisibles(true);
+                addProjection(akt04InclusiveJetProj, "Akt04Inclusive");
+
+                FastJets akt04CaloJetProj (caloJetPartFS, FastJets::ANTIKT, 0.4);
+                akt04CaloJetProj.useInvisibles(true);
+                addProjection(akt04CaloJetProj, "Akt04Calo");
 
                 // small-R track jets
                 addProjection(FastJets(trackPartFS, FastJets::ANTIKT, 0.2), "Akt02Track");
 
-
                 // book histograms
-                akt10AllJetPt =
-                    bookHisto1D("akt10AllJetPt", 50, 0, 1000*GeV,
+                akt10InclusiveJetPt =
+                    bookHisto1D("akt10InclusiveJetPt", 50, 0, 1000*GeV,
                             "anti-$k_t$ $R=1.0$ jets",
                             "jet $p_T$ / GeV", "$\\frac{d\\sigma}{dp_T} / \\frac{\\rm pb}{\\rm GeV}$");
 
-                akt10AllJetMass =
-                    bookHisto1D("akt10AllJetMass", 50, 0, 500*GeV,
+                akt10InclusiveJetMass =
+                    bookHisto1D("akt10InclusiveJetMass", 50, 0, 500*GeV,
                             "anti-$k_t$ $R=1.0$ jets",
                             "jet mass / GeV", "$\\frac{d\\sigma}{dm} / \\frac{\\rm pb}{\\rm GeV}$");
 
@@ -197,16 +201,16 @@ namespace Rivet {
 
 
                 // large-R jets
-                const Jets& akt10AllJets =
-                    applyProjection<FastJets>(event, "Akt10All").jetsByPt(250*GeV);
+                const Jets& akt10InclusiveJets =
+                    applyProjection<FastJets>(event, "Akt10Inclusive").jetsByPt(250*GeV);
 
                 const Jets& akt10CaloJets =
                     applyProjection<FastJets>(event, "Akt10Calo").jetsByPt(250*GeV);
 
 
                 // small-R jets
-                const Jets& akt04AllJets =
-                    applyProjection<FastJets>(event, "Akt04All").jetsByPt(25*GeV);
+                const Jets& akt04InclusiveJets =
+                    applyProjection<FastJets>(event, "Akt04Inclusive").jetsByPt(25*GeV);
 
                 const Jets& akt04CaloJets =
                     applyProjection<FastJets>(event, "Akt04Calo").jetsByPt(25*GeV);
@@ -217,7 +221,7 @@ namespace Rivet {
                     applyProjection<FastJets>(event, "Akt02Track").jetsByPt(7*GeV);
 
                 // TODO!!
-                // - match the Calo jets to the All jets
+                // - match the Calo jets to the Inclusive jets
                 // - store jet kinematics
                 // - store muon kinematics
                 // - store neutrino kinematics
@@ -231,12 +235,12 @@ namespace Rivet {
                 foreach (const Jet& uncorrJet, akt10CaloJets) {
 
                     // find the corresponding all jet
-                    Jet allJet;
-                    foreach (const Jet& jet, akt10AllJets) {
+                    Jet inclusiveJet;
+                    foreach (const Jet& jet, akt10InclusiveJets) {
                         // TODO
                         // not really the best way to match
                         if (deltaR(uncorrJet, jet) < 0.2) {
-                            allJet = jet;
+                            inclusiveJet = jet;
                             break;
                         }
                     }
@@ -301,32 +305,32 @@ namespace Rivet {
                     corrAkt10CaloJetMass->fill(corrMass, weight);
 
                     // we didn't find a matched jet...
-                    if (!allJet.pt() || !allJet.mass())
+                    if (!inclusiveJet.pt() || !inclusiveJet.mass())
                         continue;
 
-                    double allPt = allJet.pt();
-                    double allMass = allJet.mass();
+                    double inclusivePt = inclusiveJet.pt();
+                    double inclusiveMass = inclusiveJet.mass();
 
-                    double uncorrPtResponse = (uncorrPt - allPt) / allPt;
-                    double corrPtResponse = (corrPt - allPt) / allPt;
-                    double uncorrMassResponse = (uncorrMass - allMass) / allMass;
-                    double corrMassResponse = (corrMass - allMass) / allMass;
+                    double uncorrPtResponse = (uncorrPt - inclusivePt) / inclusivePt;
+                    double corrPtResponse = (corrPt - inclusivePt) / inclusivePt;
+                    double uncorrMassResponse = (uncorrMass - inclusiveMass) / inclusiveMass;
+                    double corrMassResponse = (corrMass - inclusiveMass) / inclusiveMass;
 
-                    uncorrAkt10CaloJetMeanPtResponseVsPt->fill(allPt, uncorrPtResponse, weight);
-                    uncorrAkt10CaloJetMeanMassResponseVsPt->fill(allPt, uncorrMassResponse, weight);
-                    corrAkt10CaloJetMeanPtResponseVsPt->fill(allPt, corrPtResponse, weight);
-                    corrAkt10CaloJetMeanMassResponseVsPt->fill(allPt, corrMassResponse, weight);
+                    uncorrAkt10CaloJetMeanPtResponseVsPt->fill(inclusivePt, uncorrPtResponse, weight);
+                    uncorrAkt10CaloJetMeanMassResponseVsPt->fill(inclusivePt, uncorrMassResponse, weight);
+                    corrAkt10CaloJetMeanPtResponseVsPt->fill(inclusivePt, corrPtResponse, weight);
+                    corrAkt10CaloJetMeanMassResponseVsPt->fill(inclusivePt, corrMassResponse, weight);
 
-                    uncorrAkt10CaloJetMeanPtResponseVsMass->fill(allMass, uncorrPtResponse, weight);
-                    uncorrAkt10CaloJetMeanMassResponseVsMass->fill(allMass, uncorrMassResponse, weight);
-                    corrAkt10CaloJetMeanPtResponseVsMass->fill(allMass, corrPtResponse, weight);
-                    corrAkt10CaloJetMeanMassResponseVsMass->fill(allMass, corrMassResponse, weight);
+                    uncorrAkt10CaloJetMeanPtResponseVsMass->fill(inclusiveMass, uncorrPtResponse, weight);
+                    uncorrAkt10CaloJetMeanMassResponseVsMass->fill(inclusiveMass, uncorrMassResponse, weight);
+                    corrAkt10CaloJetMeanPtResponseVsMass->fill(inclusiveMass, corrPtResponse, weight);
+                    corrAkt10CaloJetMeanMassResponseVsMass->fill(inclusiveMass, corrMassResponse, weight);
                 }
 
-                foreach (const Jet& jet, akt10AllJets) {
+                foreach (const Jet& jet, akt10InclusiveJets) {
                     // fill full jet histograms
-                    akt10AllJetPt->fill(jet.pt(), weight);
-                    akt10AllJetMass->fill(jet.mass(), weight);
+                    akt10InclusiveJetPt->fill(jet.pt(), weight);
+                    akt10InclusiveJetMass->fill(jet.mass(), weight);
                 }
 
             }
@@ -336,8 +340,8 @@ namespace Rivet {
             void finalize() {
 
                 // normalize histograms to cross section
-                scale(akt10AllJetPt, crossSection()/sumOfWeights());
-                scale(akt10AllJetMass, crossSection()/sumOfWeights());
+                scale(akt10InclusiveJetPt, crossSection()/sumOfWeights());
+                scale(akt10InclusiveJetMass, crossSection()/sumOfWeights());
                 scale(uncorrAkt10CaloJetPt, crossSection()/sumOfWeights());
                 scale(uncorrAkt10CaloJetMass, crossSection()/sumOfWeights());
                 scale(corrAkt10CaloJetPt, crossSection()/sumOfWeights());
@@ -352,8 +356,8 @@ namespace Rivet {
 
             // Data members like post-cuts event weight counters go here
 
-            Histo1DPtr akt10AllJetPt;
-            Histo1DPtr akt10AllJetMass;
+            Histo1DPtr akt10InclusiveJetPt;
+            Histo1DPtr akt10InclusiveJetMass;
             Histo1DPtr uncorrAkt10CaloJetPt; 
             Histo1DPtr uncorrAkt10CaloJetMass; 
             Histo1DPtr corrAkt10CaloJetPt; 
